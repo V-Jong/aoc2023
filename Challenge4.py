@@ -55,11 +55,11 @@ def do_challenge_b():
             pulled_numbers = [int(i) for i in numbers[1].strip().split()]
             cards.append(Card(line_index + 1, winning_numbers, pulled_numbers))
 
-        count = count_cards(cards, cards, 0, count)
+        count = count_cards(cards, cards, 0)
         print(f'Total count: {count}')
 
 
-def count_cards(card_list: list[Card], original_cards: list[Card], card_index: int, count: int):
+def count_cards(card_list: list[Card], original_cards: list[Card], card_index: int):
     spaces = '-' * card_index
     print(f'{spaces}Start new iteration for: {len(card_list)} cards: {card_list}')
     list_size = len(card_list)
@@ -74,7 +74,7 @@ def count_cards(card_list: list[Card], original_cards: list[Card], card_index: i
         copy_cards = original_cards[start_copy:stop_copy]
         if len(copy_cards) > 0:
             print(f'{spaces}Counting copies for {card.number}: {copy_cards}')
-            count += count_cards(copy_cards, original_cards, card_index + 1, count)
+            count += count_cards(copy_cards, original_cards, card_index + 1)
     print(f'{spaces}Returning count for {card_index}: {count}\n')
     return count
 
