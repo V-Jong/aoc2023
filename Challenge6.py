@@ -1,3 +1,7 @@
+import re
+from math import ceil, floor
+
+
 def do_challenge():
     file = open('6/input.txt', 'r')
     lines = file.readlines()
@@ -13,15 +17,21 @@ def do_challenge():
         for time_index, time in enumerate(times):
             time = int(time)
             record = int(records[time_index])
-            count_win = 0
-            for i in range(0, time, 1):
-                speed = time - i
-                rest_time = time - speed
-                c_record = speed * rest_time
-                # print(f'Checking {i}, speed {speed}, rest time {rest_time}, record {record}, current {c_record}')
-                if c_record > record:
-                    count_win += 1
+            count_win = solve(time, record)
+            # for i in range(0, time, 1):
+            #     speed = time - i
+            #     rest_time = time - speed
+            #     c_record = speed * rest_time
+            #     # print(f'Checking {i}, speed {speed}, rest time {rest_time}, record {record}, current {c_record}')
+            #     if c_record > record:
+            #         count_win += 1
             if count_win > 0:
                 wins = wins * count_win
 
         print(f'Wins: {wins}')
+
+
+def solve(t, d):
+    delta = (t**2 - 4*d)**0.5
+    lo, hi = (t - delta) / 2, (t + delta) / 2
+    return ceil(hi) - floor(lo) - 1
