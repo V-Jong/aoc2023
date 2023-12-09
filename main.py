@@ -5,6 +5,8 @@ import Challenge4
 import Challenge5
 import Challenge6
 import Challenge7
+import Challenge8
+import Challenge9
 
 if __name__ == '__main__':
-    Challenge7.do_challenge()
+    Challenge9.do_challenge()

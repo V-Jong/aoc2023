@@ -20,7 +20,7 @@ def do_challenge():
 
 
 def do_challenge_a():
-    file = open('5/input.txt', 'r')
+    file = open('5/test.txt', 'r')
     lines = file.readlines()
     lines = list(map(lambda l: l.replace('\n', ''), lines))
     key_seed_to_soil = 'seed-to-soil map:'
@@ -99,9 +99,10 @@ def do_challenge_a():
         # For part b:
         seeds_start = list(map(int, re.findall(r'\d+', lines[0])))
         seed_batches = list(divide_list_in_batches(seeds_start, 2))
+        print(f'Batches {seed_batches}')
 
-        from multiprocessing.dummy import Pool as ThreadPool
-        pool = ThreadPool(8)
+        from multiprocessing import Pool as ThreadPool
+        pool = ThreadPool(1)
 
         lowest = pool.starmap(get_lowest_for_seed_range, zip(seed_batches, itertools.repeat(seed_to_soil),
                                                                itertools.repeat(soil_to_fert),
@@ -146,6 +147,12 @@ def calculate_seed_destination(seed: int, maps: list[Map]):
     return relevant_map.target + steps
 
 
+def calc_seed_dest(seed: int, map: Map):
+    steps = seed - map.source
+    # print(f'Seed {seed} in map, calculating dest')
+    return map.target + steps
+
+
 def divide_list_in_batches(list_to_split, batch_size):
     for i in range(0, len(list_to_split), batch_size):
         yield list_to_split[i:i + batch_size]
@@ -156,8 +163,41 @@ def get_lowest_for_seed_range(seed_batch: list[int], seed_to_soil, soil_to_fert,
     start = seed_batch[0]
     steps = seed_batch[1]
     stop = start + steps - 1
+    seed_range = range(start, start + steps)
+
     print(f'Min seed {start}, max seed {stop}')
     current = start
+
+    # overlaps = get_overlaps_for_maps(seed_to_soil, seed_range)
+    #
+    # for overlap in overlaps:
+    #     for current in overlap:
+    #         dest_seed_to_soil = calculate_seed_destination(current, seed_to_soil)
+    #         # print(f'seed {seed} has dest_seed_to_soil {dest_seed_to_soil}')
+    #
+    #         dest_soil_to_fert = calculate_seed_destination(dest_seed_to_soil, soil_to_fert)
+    #         # print(f'seed {seed} has dest_soil_to_fert {dest_soil_to_fert}')
+    #
+    #         dest_fert_to_water = calculate_seed_destination(dest_soil_to_fert, fert_to_water)
+    #         # print(f'seed {seed} has dest_fert_to_water {dest_fert_to_water}')
+    #
+    #         dest_water_to_light = calculate_seed_destination(dest_fert_to_water, water_to_light)
+    #         # print(f'seed {seed} has dest_water_to_light {dest_water_to_light}')
+    #
+    #         dest_light_to_temp = calculate_seed_destination(dest_water_to_light, light_to_temp)
+    #         # print(f'seed {seed} has dest_light_to_temp {dest_light_to_temp}')
+    #
+    #         dest_temp_to_humid = calculate_seed_destination(dest_light_to_temp, temp_to_humid)
+    #         # print(f'seed {seed} has dest_temp_to_humid {dest_temp_to_humid}')
+    #
+    #         dest_humid_to_loc = calculate_seed_destination(dest_temp_to_humid, humid_to_loc)
+    #         print(f'seed {current} has dest_humid_to_loc {dest_humid_to_loc}')
+    #
+    #         if lowest == -1:
+    #             lowest = dest_humid_to_loc
+    #         else:
+    #             lowest = dest_humid_to_loc if dest_humid_to_loc < lowest else lowest
+
     while current <= stop:
         dest_seed_to_soil = calculate_seed_destination(current, seed_to_soil)
         # print(f'seed {seed} has dest_seed_to_soil {dest_seed_to_soil}')
@@ -187,3 +227,25 @@ def get_lowest_for_seed_range(seed_batch: list[int], seed_to_soil, soil_to_fert,
 
         current += 1
     return lowest
+
+
+def get_overlaps_for_maps(maps: list[Map], seed_range: range):
+    overlaps = []
+    for c_map in maps:
+        map_range = range(c_map.source, c_map.source + c_map.range)
+        print(f'Seed range {seed_range}')
+        print(f'Map range {map_range}')
+        x = set(seed_range)
+        overlap = x.intersection(map_range)
+        # overlap = range(max(seed_range[0], map_range[0]), min(seed_range[-1], map_range[-1]) + 1)
+        if len(list(overlap)) > 0:
+            print(f'Overlap range {overlap}')
+            overlaps.append(overlap)
+            # for seed in overlap:
+            #     destination = calc_seed_dest(seed, c_map)
+            #     if lowest == -1:
+            #         lowest = destination
+            #     else:
+            #         lowest = destination if destination < lowest else lowest
+    # print(f'Lowest = {lowest}')
+    return overlaps
