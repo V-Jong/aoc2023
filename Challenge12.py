@@ -49,6 +49,9 @@ def do_challenge():
         for match in re.findall('^\.*#+\?+\.', grid):
             print(f'Found matching 4 {match}')
 
+        print(f'Replacing unnecessary dots in {grid}')
+        grid = re.sub('\.+', '.', grid)
+
         print(f'Remaining groups: {groups}')
         print(f'Remaining grid: {grid}')
 
@@ -67,3 +70,4 @@ def get_combinations(text: str, char_to_fit: str):
     for sub in product((True, False), repeat=len(text)):
         combs.append("".join(char if ele else char_to_fit for char, ele in zip(text, sub)))
     return combs
+
