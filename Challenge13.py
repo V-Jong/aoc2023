@@ -1,5 +1,5 @@
 def do_challenge():
-    file = open('13/input.txt', 'r')
+    file = open('13/test.txt', 'r')
     lines = file.read().splitlines()
 
     patterns = []
@@ -16,25 +16,71 @@ def do_challenge():
     print(f'{patterns}')
 
     total = 0
+
     for pattern in patterns:
         print(f'Checking pattern: {pattern}')
         y_potentials = find_vertical_split(pattern, 0, [])
         x_potentials = find_horizontal_split(pattern, 0, [])
         # find_horizontal_split(pattern)
+        potential_smudges = []
 
         print(f'Y split: {y_potentials}')
         print(f'X split: {x_potentials}')
+        y_valid_list = []
+        x_valid_list = []
 
         for y in y_potentials:
-            y_valid = is_valid_vertical(pattern, y, y + 1, True)
+            y_valid = is_valid_vertical(pattern, y, y + 1, True, False, potential_smudges)
             print(f'{y} as y split is valid: {y_valid}')
             if y_valid:
-                total += y + 1
+                y_valid_list.append(y)
         for x in x_potentials:
-            x_valid = is_valid_horizontal(pattern, x, x + 1, True)
+            x_valid = is_valid_horizontal(pattern, x, x + 1, True, False, potential_smudges)
             print(f'{x} as x split is valid: {x_valid}')
             if x_valid:
+                x_valid_list.append(x)
+
+        print(f'Potential smudges: {potential_smudges}')
+        final_pattern = pattern.copy()
+        for potential_smudge in potential_smudges:
+            line_to_edit = pattern[potential_smudge[0]]
+            print(f'Testing smudge: {potential_smudge} on line: {line_to_edit}')
+            char = line_to_edit[potential_smudge[1]]
+            print(f'char to replace at index {potential_smudge[1]}: {char}')
+            if char == '.':
+                new_line = line_to_edit[:potential_smudge[1]] + '#' + line_to_edit[potential_smudge[1] + 1:]
+            else:
+                new_line = line_to_edit[:potential_smudge[1]] + '.' + line_to_edit[potential_smudge[1] + 1:]
+            test_pattern = pattern.copy()
+            test_pattern[potential_smudge[0]] = new_line
+            with open("13/output.txt", "a") as f:
+                for line in test_pattern:
+                    print(f'{line}', file=f)
+                print('', file=f)
+            count_valid = calculate_valid(test_pattern, y_valid_list, x_valid_list)
+            if count_valid == 1:
+                final_pattern = test_pattern
+                break
+
+        print(f'After fixing, final pattern: {final_pattern}')
+        y_potentials = find_vertical_split(final_pattern, 0, [])
+        x_potentials = find_horizontal_split(final_pattern, 0, [])
+
+        print(f'Y split final: {y_potentials}')
+        print(f'X split final: {x_potentials}')
+
+        for y in y_potentials:
+            y_valid = is_valid_vertical(final_pattern, y, y + 1, True, False, [])
+            if y_valid and y not in y_valid_list:
+                print(f'{y} as y split is valid: {y_valid}')
+                total += y + 1
+        for x in x_potentials:
+            x_valid = is_valid_horizontal(final_pattern, x, x + 1, True, False, [])
+            if x_valid and x not in x_valid_list:
+                print(f'{x} as x split is valid: {x_valid}')
                 total += (x + 1) * 100
+
+        print()
 
     print(f'\nSum: {total}')
 
@@ -92,7 +138,7 @@ def find_vertical_split(pattern: list[str], left_col_index: int, matches: list[i
     return find_vertical_split(pattern, left_col_index + 1, matches)
 
 
-def is_valid_vertical(pattern: list[str], last_valid_left: int, last_valid_right: int, current_valid: bool):
+def is_valid_vertical(pattern: list[str], last_valid_left: int, last_valid_right: int, current_valid: bool, fix: bool, smudges: []):
     l_to_check = last_valid_left - 1
     r_to_check = last_valid_right + 1
     if l_to_check < 0 or r_to_check >= len(pattern[0]):
@@ -107,12 +153,21 @@ def is_valid_vertical(pattern: list[str], last_valid_left: int, last_valid_right
 
     for l_index, l_char in enumerate(left_col):
         if l_char != right_col[l_index]:
-            return False
+            if fix:
+                line_to_edit = pattern[l_index]
+                new_line = line_to_edit[:l_to_check] + right_col[l_index] + line_to_edit[l_to_check + 1:]
+                print(f'replacing vertical at index {l_index} {line_to_edit} with {new_line}')
+                pattern[l_index] = new_line
+                return current_valid and is_valid_vertical(pattern, last_valid_left, last_valid_right, current_valid, fix, smudges)
+            else:
+                smudges.append((l_index, r_to_check))
+                smudges.append((l_index, r_to_check))
+                return False
 
-    return current_valid and is_valid_vertical(pattern, l_to_check, r_to_check, current_valid)
+    return current_valid and is_valid_vertical(pattern, l_to_check, r_to_check, current_valid, fix, smudges)
 
 
-def is_valid_horizontal(pattern: list[str], last_valid_top: int, last_valid_bottom: int, current_valid: bool):
+def is_valid_horizontal(pattern: list[str], last_valid_top: int, last_valid_bottom: int, current_valid: bool, fix: bool, smudges: []):
     t_to_check = last_valid_top - 1
     b_to_check = last_valid_bottom + 1
     if t_to_check < 0 or b_to_check >= len(pattern):
@@ -130,6 +185,35 @@ def is_valid_horizontal(pattern: list[str], last_valid_top: int, last_valid_bott
 
     for t_index, t_char in enumerate(top_row):
         if t_char != bottom_row[t_index]:
-            return False
+            if fix:
+                print(f'replacing horizontal at index {t_to_check} {pattern[t_to_check]} with {bottom_line}')
+                pattern[t_to_check] = bottom_line
+                return current_valid and is_valid_horizontal(pattern, last_valid_top, last_valid_bottom, current_valid, fix, smudges)
+            else:
+                smudges.append((t_to_check, t_index))
+                smudges.append((b_to_check, t_index))
+                return False
 
-    return current_valid and is_valid_horizontal(pattern, t_to_check, b_to_check, current_valid)
+    return current_valid and is_valid_horizontal(pattern, t_to_check, b_to_check, current_valid, fix, smudges)
+
+
+def calculate_valid(pattern: list[str], y_to_skip: list[int], x_to_skip: list[int]):
+    print(f'Calculating valid')
+    count_valid = 0
+    y_potentials = find_vertical_split(pattern, 0, [])
+    x_potentials = find_horizontal_split(pattern, 0, [])
+    print(f'y potentials: {y_potentials}')
+    print(f'x potentials: {x_potentials}')
+
+    for y in y_potentials:
+        y_valid = is_valid_vertical(pattern, y, y + 1, True, False, [])
+        # print(f'{y} as y split is valid: {y_valid}')
+        if y_valid and y not in y_to_skip:
+            count_valid += 1
+    for x in x_potentials:
+        x_valid = is_valid_horizontal(pattern, x, x + 1, True, False, [])
+        # print(f'{x} as x split is valid: {x_valid}')
+        if x_valid and x not in x_to_skip:
+            count_valid += 1
+    print(f'Calculating valid return {count_valid}')
+    return count_valid
