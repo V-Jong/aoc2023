@@ -13,6 +13,15 @@ import Challenge12
 import Challenge13
 import Challenge14
 import Challenge15
+import Challenge16
 
-if __name__ == '__main__':
-    Challenge15.do_challenge()
+import logging
+
+logging.basicConfig(filename='C:\\Users\\Vincent\\Documents\\PyCharm\\AoC_1\\logs\\MyLog.log',level=logging.DEBUG)
+
+try:
+    if __name__ == '__main__':
+        Challenge16.do_challenge()
+
+except Exception as e:
+    logging.info(e)
