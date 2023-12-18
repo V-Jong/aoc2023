@@ -14,6 +14,7 @@ import Challenge13
 import Challenge14
 import Challenge15
 import Challenge16
+import Challenge17
 
 import logging
 
@@ -21,7 +22,7 @@ logging.basicConfig(filename='C:\\Users\\Vincent\\Documents\\PyCharm\\AoC_1\\log
 
 try:
     if __name__ == '__main__':
-        Challenge16.do_challenge()
+        Challenge17.do_challenge()
 
 except Exception as e:
     logging.info(e)
